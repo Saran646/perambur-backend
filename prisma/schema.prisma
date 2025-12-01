@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with authentication
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String    // Hashed password
+  phone         String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  reviews       Review[]
+  helpfulVotes  HelpfulVote[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+enum Role {
+  USER
+  STAFF
+  ADMIN
+}
+
+// NextAuth Account model
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// NextAuth Session model
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// NextAuth Verification Token model
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Branch model
+model Branch {
+  id            String    @id @default(cuid())
+  name          String
+  address       String
+  city          String
+  state         String
+  area          String    @default("Chennai") // New field for filtering
+  phone         String
+  mapLink       String?
+  workingHours  String?
+  description   String?   @db.Text
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  reviews       Review[]
+  dishes        Dish[]
+}
+
+// Dish model
+model Dish {
+  id          String      @id @default(cuid())
+  name        String
+  description String      @db.Text
+  category    Category
+  price       Decimal     @db.Decimal(10, 2)
+  isAvailable Boolean     @default(true)
+  branchId    String?     // Null means available at all branches
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  branch      Branch?     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  reviews     ReviewDish[]
+
+  @@index([category])
+  @@index([branchId])
+}
+
+enum Category {
+  SWEETS
+  SNACKS
+  SAVOURIES
+  COOKIES
+  PODI
+  THOKKU
+  PICKLE
+  GIFT_HAMPER
+}
+
+// Review model
+model Review {
+  id                  String      @id @default(cuid())
+  userId              String?
+  branchId            String
+  
+  // Guest details
+  guestName           String?
+  guestEmail          String?
+  guestPhone          String?
+  
+  // Ratings (1-5 stars)
+  overallRating       Int         // Main rating
+  tasteRating         Int?        // Optional sub-ratings
+  serviceRating       Int?
+  ambienceRating      Int?
+  cleanlinessRating   Int?
+  valueRating         Int?        // Value for money
+  
+  visitType           VisitType
+  reviewText          String      @db.Text
+  staffReply          String?     @db.Text
+  staffReplyAt        DateTime?
+  tableNumber         String?
+  
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  // Relations
+  user                User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch              Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  dishes              ReviewDish[]
+  helpfulVotes        HelpfulVote[]
+
+  @@index([branchId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([overallRating])
+}
+
+enum VisitType {
+  DINE_IN
+  TAKEAWAY
+  DELIVERY
+}
+
+// Join table for Review and Dish (many-to-many)
+model ReviewDish {
+  reviewId  String
+  dishId    String
+  
+  review    Review  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  dish      Dish    @relation(fields: [dishId], references: [id], onDelete: Cascade)
+
+  @@id([reviewId, dishId])
+}
+
+// Helpful vote model
+model HelpfulVote {
+  id          String    @id @default(cuid())
+  userId      String
+  reviewId    String
+  isHelpful   Boolean   // true = helpful, false = not helpful
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review      Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  // One vote per user per review
+  @@unique([userId, reviewId])
+  @@index([reviewId])
+}
