@@ -64,12 +64,17 @@ router.post('/', async (req, res) => {
         });
 
         // Send email notification
-        await sendReviewNotification(review);
+        const emailSent = await sendReviewNotification(review);
+
+        if (!emailSent) {
+            console.warn('Email notification failed to send for review:', review.id);
+        }
 
         res.json({
             success: true,
             data: review,
-            message: 'Review submitted successfully'
+            message: 'Review submitted successfully',
+            emailSent: emailSent
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
