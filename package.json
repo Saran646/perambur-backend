@@ -1,21 +1,3 @@
-{
-    "name": "perambur-srinivasa-reviews-backend",
-    "version": "1.0.0",
-    "description": "Shared backend API for hotel reviews",
-    "main": "dist/index.js",
-    "scripts": {
-        "dev": "tsx watch src/index.ts",
-        "build": "tsc",
-        "start": "node dist/index.js",
-        "prisma:generate": "prisma generate",
-        "prisma:migrate": "prisma migrate dev",
-        "prisma:seed": "tsx prisma/seed.ts"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "express": "^4.18.2",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",
         "@prisma/client": "^5.7.1",
