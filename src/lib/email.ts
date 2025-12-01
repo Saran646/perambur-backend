@@ -1,15 +1,9 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
-// Create transporter with environment variables
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '465'),
-    secure: true, // Use SSL on port 465
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
-});
+// Initialize SendGrid
+if (process.env.SENDGRID_API_KEY) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 // Helper to get emoji for rating
 const getRatingEmoji = (rating: number) => {
@@ -25,16 +19,18 @@ const getRatingEmoji = (rating: number) => {
 
 export async function sendReviewNotification(review: any) {
     try {
-        if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-            console.warn('SMTP credentials not configured. Email will not be sent.');
+        if (!process.env.SENDGRID_API_KEY) {
+            console.warn('SendGrid API key not configured. Email will not be sent.');
             return false;
         }
 
         const adminDashboardUrl = process.env.ADMIN_DASHBOARD_URL || 'http://localhost:3001/dashboard';
+        const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.SMTP_USER || 'noreply@perambursrinivasa.com';
+        const toEmail = process.env.ADMIN_EMAIL || 'admin@perambursrinivasa.com';
 
-        const mailOptions = {
-            from: `"Perambur Srinivasa Reviews" <${process.env.SMTP_USER}>`,
-            to: process.env.ADMIN_EMAIL || 'raghulbalaji2014@gmail.com',
+        const msg = {
+            to: toEmail,
+            from: fromEmail,
             subject: `New Review: ${getRatingEmoji(review.overallRating)} - ${review.branch.name}`,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
@@ -48,24 +44,23 @@ export async function sendReviewNotification(review: any) {
                     </div>
 
                     <div style="background-color: #fff7ed; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-                        <h3 style="margin-top: 0; color: #9a3412;">Visit Details</h3>
-                        <p><strong>Branch:</strong> ${review.branch.name}</p>
-                        <p><strong>Order Type:</strong> ${review.visitType}</p>
-                        ${review.tableNumber ? `<p><strong>Table Number:</strong> ${review.tableNumber}</p>` : ''}
+                        <h3 style="margin-top: 0; color: #334155;">Branch</h3>
+                        <p><strong>${review.branch.name}</strong></p>
+                        <p style="color: #64748b; font-size: 14px;">${review.branch.address}, ${review.branch.city}</p>
                     </div>
 
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="color: #334155;">Ratings</h3>
-                        <div style="font-size: 18px; margin-bottom: 10px;">
-                            <strong>Overall:</strong> ${getRatingEmoji(review.overallRating)}
-                        </div>
-                        <ul style="list-style: none; padding: 0;">
-                            ${review.tasteRating ? `<li>Taste: ${review.tasteRating}/5</li>` : ''}
-                            ${review.serviceRating ? `<li>Service: ${review.serviceRating}/5</li>` : ''}
-                            ${review.ambienceRating ? `<li>Ambience: ${review.ambienceRating}/5</li>` : ''}
-                            ${review.cleanlinessRating ? `<li>Cleanliness: ${review.cleanlinessRating}/5</li>` : ''}
-                            ${review.valueRating ? `<li>Value: ${review.valueRating}/5</li>` : ''}
-                        </ul>
+                    <div style="background-color: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <h3 style="margin-top: 0; color: #334155;">Rating Details</h3>
+                        <p style="font-size: 24px; margin: 10px 0;">
+                            <strong>${getRatingEmoji(review.overallRating)}</strong>
+                        </p>
+                        ${review.tasteRating ? `<p>Taste: ${review.tasteRating}/5</p>` : ''}
+                        ${review.serviceRating ? `<p>Service: ${review.serviceRating}/5</p>` : ''}
+                        ${review.ambienceRating ? `<p>Ambience: ${review.ambienceRating}/5</p>` : ''}
+                        ${review.cleanlinessRating ? `<p>Cleanliness: ${review.cleanlinessRating}/5</p>` : ''}
+                        ${review.valueRating ? `<p>Value for Money: ${review.valueRating}/5</p>` : ''}
+                        <p><strong>Visit Type:</strong> ${review.visitType}</p>
+                        ${review.tableNumber ? `<p><strong>Table:</strong> ${review.tableNumber}</p>` : ''}
                     </div>
 
                     <div style="background-color: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 25px;">
@@ -86,12 +81,15 @@ export async function sendReviewNotification(review: any) {
             `
         };
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Message sent: %s', info.messageId);
-        console.log('Email sent to:', process.env.ADMIN_EMAIL);
+        await sgMail.send(msg);
+        console.log('SendGrid email sent successfully to:', toEmail);
         return true;
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Error sending email via SendGrid:', error);
+        if (error && typeof error === 'object' && 'response' in error) {
+            const sgError = error as any;
+            console.error('SendGrid error details:', sgError.response?.body);
+        }
         return false;
     }
 }
