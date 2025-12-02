@@ -11,6 +11,7 @@ import adminBranchesRouter from './routes/admin/branches';
 import adminReviewsRouter from './routes/admin/reviews';
 import adminMenusRouter from './routes/admin/menus';
 import adminStatsRouter from './routes/admin/stats';
+import adminAnalyticsRouter from './routes/admin/analytics';
 import testRouter from './routes/test';
 
 // Load environment variables
@@ -48,6 +49,7 @@ app.use('/api/admin/branches', adminBranchesRouter);
 app.use('/api/admin/reviews', adminReviewsRouter);
 app.use('/api/admin/menus', adminMenusRouter);
 app.use('/api/admin/stats', adminStatsRouter);
+app.use('/api/admin/analytics', adminAnalyticsRouter);
 
 // Error handling
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
