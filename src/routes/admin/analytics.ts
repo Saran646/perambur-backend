@@ -66,6 +66,51 @@ router.get('/reviews', async (req, res) => {
     }
 });
 
+// PUT /api/admin/analytics/complaints/:reviewId - Update complaint status
+router.put('/complaints/:reviewId', async (req, res) => {
+    try {
+        const { reviewId } = req.params;
+        const { status, remarks } = req.body;
+
+        if (!status || !['open', 'closed'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Valid status (open/closed) is required'
+            });
+        }
+
+        const updateData: any = {
+            complaintStatus: status,
+            adminRemarks: remarks
+        };
+
+        if (status === 'closed') {
+            updateData.complaintResolvedAt = new Date();
+            // In a real app, we'd get the admin ID from the session/token
+            updateData.complaintResolvedBy = 'Admin';
+        } else {
+            updateData.complaintResolvedAt = null;
+            updateData.complaintResolvedBy = null;
+        }
+
+        const updatedReview = await prisma.review.update({
+            where: { id: reviewId },
+            data: updateData
+        });
+
+        res.json({
+            success: true,
+            data: updatedReview
+        });
+    } catch (error) {
+        console.error('Complaint update error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update complaint status'
+        });
+    }
+});
+
 // GET /api/admin/analytics/export - Export reviews to Excel
 router.get('/export', async (req, res) => {
     try {
@@ -113,26 +158,35 @@ router.get('/export', async (req, res) => {
         });
 
         // Format data for Excel
-        const excelData = reviews.map(review => ({
-            'Date': new Date(review.createdAt).toLocaleDateString('en-IN'),
-            'Branch': review.branch.name,
-            'Area': review.branch.area,
-            'City': review.branch.city,
-            'Guest Name': review.guestName || 'Anonymous',
-            'Phone': review.guestPhone || 'N/A',
-            'Email': review.guestEmail || 'N/A',
-            'Overall Rating': review.overallRating,
-            'Taste Rating': review.tasteRating || '-',
-            'Service Rating': review.serviceRating || '-',
-            'Ambience Rating': review.ambienceRating || '-',
-            'Cleanliness Rating': review.cleanlinessRating || '-',
-            'Value Rating': review.valueRating || '-',
-            'Visit Type': review.visitType,
-            'Table Number': review.tableNumber || '-',
-            'Review Text': review.reviewText,
-            'Admin Reply': review.staffReply || '-',
-            'Reply Date': review.staffReplyAt ? new Date(review.staffReplyAt).toLocaleDateString('en-IN') : '-'
-        }));
+        const excelData = reviews.map(review => {
+            const isComplaint = review.overallRating <= 3;
+
+            return {
+                'Date': new Date(review.createdAt).toLocaleDateString('en-IN'),
+                'Branch': review.branch.name,
+                'Area': review.branch.area,
+                'City': review.branch.city,
+                'Guest Name': review.guestName || 'Anonymous',
+                'Phone': review.guestPhone || 'N/A',
+                'Email': review.guestEmail || 'N/A',
+                'Overall Rating': review.overallRating,
+                'Taste Rating': review.tasteRating || '-',
+                'Service Rating': review.serviceRating || '-',
+                'Ambience Rating': review.ambienceRating || '-',
+                'Cleanliness Rating': review.cleanlinessRating || '-',
+                'Value Rating': review.valueRating || '-',
+                'Visit Type': review.visitType,
+                'Table Number': review.tableNumber || '-',
+                'Review Text': review.reviewText,
+                'Admin Reply': review.staffReply || '-',
+                'Reply Date': review.staffReplyAt ? new Date(review.staffReplyAt).toLocaleDateString('en-IN') : '-',
+                // Complaint Management Columns
+                'Complaint Status': isComplaint ? (review.complaintStatus || 'open') : '-',
+                'Admin Remarks': isComplaint ? (review.adminRemarks || '-') : '-',
+                'Resolved At': (isComplaint && review.complaintResolvedAt) ? new Date(review.complaintResolvedAt).toLocaleDateString('en-IN') : '-',
+                'Resolved By': (isComplaint && review.complaintResolvedBy) ? review.complaintResolvedBy : '-'
+            };
+        });
 
         // Create workbook and worksheet
         const wb = XLSX.utils.book_new();
@@ -157,7 +211,11 @@ router.get('/export', async (req, res) => {
             { wch: 10 }, // Table
             { wch: 50 }, // Review Text
             { wch: 30 }, // Admin Reply
-            { wch: 12 }  // Reply Date
+            { wch: 12 }, // Reply Date
+            { wch: 15 }, // Complaint Status
+            { wch: 30 }, // Admin Remarks
+            { wch: 12 }, // Resolved At
+            { wch: 15 }  // Resolved By
         ];
         ws['!cols'] = colWidths;
 

@@ -154,6 +154,12 @@ model Review {
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
 
+  // Complaint Management
+  complaintStatus     String      @default("open") // "open" or "closed"
+  adminRemarks        String?     @db.Text
+  complaintResolvedAt DateTime?
+  complaintResolvedBy String?
+
   // Relations
   user                User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   branch              Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
