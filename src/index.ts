@@ -1,6 +1,7 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { geoBlockMiddleware } from './middleware/geoBlock';
 
 // Import routes
 import publicBranchesRouter from './routes/public/branches';
@@ -29,6 +30,9 @@ app.use(cors({
     origin: true,
     credentials: true
 }));
+
+// Geo-blocking middleware - Only allow requests from India
+app.use(geoBlockMiddleware);
 
 // Health check
 app.get('/health', (req, res) => {
