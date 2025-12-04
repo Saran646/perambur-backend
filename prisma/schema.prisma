@@ -87,6 +87,8 @@ model Branch {
   workingHours  String?
   description   String?   @db.Text
   isActive      Boolean   @default(true)
+  latitude      Float?    // For geolocation
+  longitude     Float?    // For geolocation
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
