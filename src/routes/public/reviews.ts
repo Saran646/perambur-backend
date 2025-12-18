@@ -12,12 +12,12 @@ const reviewSchema = z.object({
     visitDate: z.string().optional(), // Date field
     guestEmail: z.string().email().optional().or(z.literal('')),
     guestPhone: z.string().optional(),
-    overallRating: z.number().min(1).max(5),
-    tasteRating: z.number().min(0).max(5).optional(),
-    serviceRating: z.number().min(0).max(5).optional(),
-    ambienceRating: z.number().min(0).max(5).optional(),
-    cleanlinessRating: z.number().min(0).max(5).optional(),
-    valueRating: z.number().min(0).max(5).optional(),
+    overallRating: z.number().min(1).max(4),
+    tasteRating: z.number().min(0).max(4).optional(),
+    serviceRating: z.number().min(0).max(4).optional(),
+    ambienceRating: z.number().min(0).max(4).optional(),
+    cleanlinessRating: z.number().min(0).max(4).optional(),
+    valueRating: z.number().min(0).max(4).optional(),
     visitType: z.enum(['DINE_IN', 'TAKEAWAY', 'DELIVERY']),
     whatLiked: z.string().optional(), // New field
     whatImprove: z.string().optional(), // New field

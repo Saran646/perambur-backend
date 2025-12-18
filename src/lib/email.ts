@@ -6,12 +6,11 @@
 // Helper to get emoji for rating
 const getRatingEmoji = (rating: number) => {
     switch (rating) {
-        case 1: return '😠 Angry';
-        case 2: return '☹️ Unhappy';
-        case 3: return '😐 Neutral';
-        case 4: return '🙂 Happy';
-        case 5: return '😍 Loved it';
-        default: return `${rating}/5`;
+        case 4: return '😍 Love it';
+        case 3: return '😊 Good';
+        case 2: return '😐 Average';
+        case 1: return '🙁 Poor';
+        default: return `${rating}/4`;
     }
 };
 
@@ -51,18 +50,20 @@ export async function sendReviewNotification(review: any) {
                     <p style="font-size: 24px; margin: 10px 0;">
                         <strong>${getRatingEmoji(review.overallRating)}</strong>
                     </p>
-                    ${review.tasteRating ? `<p>Taste: ${review.tasteRating}/5</p>` : ''}
-                    ${review.serviceRating ? `<p>Service: ${review.serviceRating}/5</p>` : ''}
-                    ${review.ambienceRating ? `<p>Ambience: ${review.ambienceRating}/5</p>` : ''}
-                    ${review.cleanlinessRating ? `<p>Cleanliness: ${review.cleanlinessRating}/5</p>` : ''}
-                    ${review.valueRating ? `<p>Value for Money: ${review.valueRating}/5</p>` : ''}
+                    ${review.tasteRating ? `<p>Taste: ${review.tasteRating}/4</p>` : ''}
+                    ${review.serviceRating ? `<p>Service: ${review.serviceRating}/4</p>` : ''}
+                    ${review.ambienceRating ? `<p>Ambience: ${review.ambienceRating}/4</p>` : ''}
+                    ${review.cleanlinessRating ? `<p>Cleanliness: ${review.cleanlinessRating}/4</p>` : ''}
+                    ${review.valueRating ? `<p>Value for Money: ${review.valueRating}/4</p>` : ''}
                     <p><strong>Visit Type:</strong> ${review.visitType}</p>
                     ${review.tableNumber ? `<p><strong>Table:</strong> ${review.tableNumber}</p>` : ''}
                 </div>
 
                 <div style="background-color: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 25px;">
-                    <h3 style="margin-top: 0; color: #334155;">Review</h3>
-                    <p style="font-style: italic; color: #475569;">"${review.reviewText}"</p>
+                    <h3 style="margin-top: 0; color: #334155;">Feedback</h3>
+                    ${review.whatLiked ? `<p><strong>Liked:</strong> ${review.whatLiked}</p>` : ''}
+                    ${review.whatImprove ? `<p><strong>Improve:</strong> ${review.whatImprove}</p>` : ''}
+                    <p><strong>Recommend:</strong> ${review.wouldRecommend}</p>
                 </div>
 
                 <div style="text-align: center; margin-top: 30px;">
