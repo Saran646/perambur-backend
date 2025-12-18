@@ -57,7 +57,7 @@ router.post('/', async (req, res) => {
         const validatedData = reviewSchema.parse(req.body);
 
         const review = await prisma.review.create({
-            data: validatedData,
+            data: validatedData as any, // Explicit cast to avoid TypeScript errors during schema migration
             include: {
                 branch: true,
                 user: {
