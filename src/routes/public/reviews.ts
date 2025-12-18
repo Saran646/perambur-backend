@@ -9,6 +9,7 @@ const router: Router = express.Router();
 const reviewSchema = z.object({
     branchId: z.string(),
     guestName: z.string().optional(),
+    visitDate: z.string().optional(), // Date field
     guestEmail: z.string().email().optional().or(z.literal('')),
     guestPhone: z.string().optional(),
     overallRating: z.number().min(1).max(5),
@@ -18,7 +19,9 @@ const reviewSchema = z.object({
     cleanlinessRating: z.number().min(0).max(5).optional(),
     valueRating: z.number().min(0).max(5).optional(),
     visitType: z.enum(['DINE_IN', 'TAKEAWAY', 'DELIVERY']),
-    reviewText: z.string(),
+    whatLiked: z.string().optional(), // New field
+    whatImprove: z.string().optional(), // New field
+    wouldRecommend: z.string().optional(), // New field: Yes/No/Maybe
     tableNumber: z.string().optional()
 });
 

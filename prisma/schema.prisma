@@ -134,8 +134,10 @@ model Review {
   userId              String?
   branchId            String
   
+  
   // Guest details
   guestName           String?
+  visitDate           String?     // Date of visit
   guestEmail          String?
   guestPhone          String?
   
@@ -148,7 +150,12 @@ model Review {
   valueRating         Int?        // Value for money
   
   visitType           VisitType
-  reviewText          String      @db.Text
+  
+  // New structured feedback fields
+  whatLiked           String?     @db.Text
+  whatImprove         String?     @db.Text
+  wouldRecommend      String?     // Yes/No/Maybe
+  
   staffReply          String?     @db.Text
   staffReplyAt        DateTime?
   tableNumber         String?
