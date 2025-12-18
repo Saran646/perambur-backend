@@ -177,7 +177,10 @@ router.get('/export', async (req, res) => {
                 'Value Rating': review.valueRating || '-',
                 'Visit Type': review.visitType,
                 'Table Number': review.tableNumber || '-',
-                'Review Text': review.reviewText,
+                'Visit Date': review.visitDate || '-',
+                'What Liked': review.whatLiked || '-',
+                'What to Improve': review.whatImprove || '-',
+                'Would Recommend': review.wouldRecommend || '-',
                 'Admin Reply': review.staffReply || '-',
                 'Reply Date': review.staffReplyAt ? new Date(review.staffReplyAt).toLocaleDateString('en-IN') : '-',
                 // Complaint Management Columns
