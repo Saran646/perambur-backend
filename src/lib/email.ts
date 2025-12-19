@@ -55,6 +55,7 @@ export async function sendReviewNotification(review: any) {
                     ${review.ambienceRating ? `<p>Ambience: ${review.ambienceRating}/4</p>` : ''}
                     ${review.cleanlinessRating ? `<p>Cleanliness: ${review.cleanlinessRating}/4</p>` : ''}
                     ${review.valueRating ? `<p>Value for Money: ${review.valueRating}/4</p>` : ''}
+                    ${review.experienceRating ? `<p>Experience: ${review.experienceRating}/4</p>` : ''}
                     <p><strong>Visit Type:</strong> ${review.visitType}</p>
                     ${review.tableNumber ? `<p><strong>Table:</strong> ${review.tableNumber}</p>` : ''}
                 </div>

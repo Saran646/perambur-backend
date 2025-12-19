@@ -18,6 +18,7 @@ const reviewSchema = z.object({
     ambienceRating: z.number().min(0).max(4).optional(),
     cleanlinessRating: z.number().min(0).max(4).optional(),
     valueRating: z.number().min(0).max(4).optional(),
+    experienceRating: z.number().min(0).max(4).optional(),
     visitType: z.enum(['DINE_IN', 'TAKEAWAY', 'DELIVERY']),
     whatLiked: z.string().optional(), // New field
     whatImprove: z.string().optional(), // New field

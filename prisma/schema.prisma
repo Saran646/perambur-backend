@@ -148,6 +148,7 @@ model Review {
   ambienceRating      Int?
   cleanlinessRating   Int?
   valueRating         Int?        // Value for money
+  experienceRating    Int?        // Dining experience rating
   
   visitType           VisitType
   

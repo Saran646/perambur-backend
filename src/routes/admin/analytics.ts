@@ -175,6 +175,7 @@ router.get('/export', async (req, res) => {
                 'Ambience Rating': review.ambienceRating || '-',
                 'Cleanliness Rating': review.cleanlinessRating || '-',
                 'Value Rating': review.valueRating || '-',
+                'Experience Rating': review.experienceRating || '-',
                 'Visit Type': review.visitType,
                 'Table Number': review.tableNumber || '-',
                 'Visit Date': (review as any).visitDate || '-',
