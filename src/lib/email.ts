@@ -1,7 +1,4 @@
-/**
- * Email service using Brevo (formerly Sendinblue)
- * Free tier: 300 emails/day
- */
+import { Resend } from 'resend';
 
 // Helper to get emoji for rating
 const getRatingEmoji = (rating: number) => {
@@ -16,15 +13,17 @@ const getRatingEmoji = (rating: number) => {
 
 export async function sendReviewNotification(review: any) {
     try {
-        const apiKey = process.env.BREVO_API_KEY;
+        const apiKey = process.env.RESEND_API_KEY;
 
         if (!apiKey) {
-            console.warn('Brevo API key not configured. Email will not be sent.');
+            console.warn('Resend API key not configured. Email will not be sent.');
             return false;
         }
 
+        const resend = new Resend(apiKey);
+
         const adminDashboardUrl = process.env.ADMIN_DASHBOARD_URL || 'https://ps4admin.netlify.app/dashboard';
-        const fromEmail = process.env.EMAIL_FROM || 'noreply@perambursrinivasa.com';
+        const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
         const fromName = process.env.EMAIL_FROM_NAME || 'PS4 Srinivasa Reviews';
         const toEmail = process.env.ADMIN_EMAIL || 'admin@perambursrinivasa.com';
 
@@ -79,35 +78,22 @@ export async function sendReviewNotification(review: any) {
             </div>
         `;
 
-        // Use Brevo's API
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-            method: 'POST',
-            headers: {
-                'accept': 'application/json',
-                'api-key': apiKey,
-                'content-type': 'application/json'
-            },
-            body: JSON.stringify({
-                sender: {
-                    name: fromName,
-                    email: fromEmail
-                },
-                to: [{ email: toEmail }],
-                subject: `New Review: ${getRatingEmoji(review.overallRating)} - ${review.branch.name}`,
-                htmlContent: emailContent
-            })
+        const { data, error } = await resend.emails.send({
+            from: `${fromName} <${fromEmail}>`,
+            to: [toEmail],
+            subject: `New Review: ${getRatingEmoji(review.overallRating)} - ${review.branch.name}`,
+            html: emailContent,
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Brevo API error:', errorData);
+        if (error) {
+            console.error('Resend API error:', error);
             return false;
         }
 
-        console.log('Brevo email sent successfully to:', toEmail);
+        console.log('Resend email sent successfully:', data?.id);
         return true;
     } catch (error) {
-        console.error('Error sending email via Brevo:', error);
+        console.error('Error sending email via Resend:', error);
         return false;
     }
 }
