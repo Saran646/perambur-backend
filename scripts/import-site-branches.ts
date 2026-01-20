@@ -199,30 +199,35 @@ async function importSiteBranches() {
 
     let count = 0;
     for (const branch of branches) {
-        await prisma.branch.upsert({
-            where: { name: branch.name },
-            update: {
-                address: branch.address,
-                phone: branch.phone,
-                mapLink: branch.mapLink,
-                area: branch.area,
-                city: "Chennai", // Defaulting to Chennai as per data
-                state: branch.name.includes("Tirupathi") ? "Andhra Pradesh" : "Tamil Nadu",
-                isActive: true
-            },
-            create: {
-                name: branch.name,
-                address: branch.address,
-                phone: branch.phone,
-                mapLink: branch.mapLink,
-                area: branch.area,
-                city: "Chennai",
-                state: branch.name.includes("Tirupathi") ? "Andhra Pradesh" : "Tamil Nadu",
-                isActive: true
-            }
+        const existing = await prisma.branch.findFirst({
+            where: { name: branch.name }
         });
+
+        const branchData = {
+            address: branch.address,
+            phone: branch.phone,
+            mapLink: branch.mapLink,
+            area: branch.area,
+            city: "Chennai", // Defaulting to Chennai as per data
+            state: branch.name.includes("Tirupathi") ? "Andhra Pradesh" : "Tamil Nadu",
+            isActive: true
+        };
+
+        if (existing) {
+            await prisma.branch.update({
+                where: { id: existing.id },
+                data: branchData
+            });
+        } else {
+            await prisma.branch.create({
+                data: {
+                    name: branch.name,
+                    ...branchData
+                }
+            });
+        }
         count++;
-        console.log(`[${count}/${branches.length}] Imported: ${branch.name}`);
+        console.log(`[${count}/${branches.length}] Processed: ${branch.name}`);
     }
 }
 
