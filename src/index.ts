@@ -1,6 +1,7 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { rateLimit } from 'express-rate-limit';
 import { geoBlockMiddleware } from './middleware/geoBlock';
 
 // Import routes
@@ -21,9 +22,37 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT || 4000;
 
+// Rate limiting configurations
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: { success: false, error: 'Too many requests, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const reviewLimiter = rateLimit({
+    windowMs: 30 * 60 * 1000, // 30 minutes
+    max: 5, // Limit each IP to 5 review submissions per 30 minutes
+    message: { success: false, error: 'Too many reviews submitted. Please wait before submitting another.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const adminAuthLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 login attempts per 15 minutes
+    message: { success: false, error: 'Too many login attempts. Please try again in 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply general limiter to all routes
+app.use(generalLimiter);
 
 // CORS configuration - Allow all for now to fix connection issues
 app.use(cors({
@@ -41,14 +70,14 @@ app.get('/health', (req, res) => {
 
 // Public routes
 app.use('/api/branches', publicBranchesRouter);
-app.use('/api/reviews', publicReviewsRouter);
+app.use('/api/reviews', reviewLimiter, publicReviewsRouter); // Apply strict limit to review submissions
 app.use('/api/menus', publicMenusRouter);
 
 // Test routes (for debugging)
 app.use('/api/test', testRouter);
 
 // Admin routes
-app.use('/api/admin/auth', adminAuthRouter);
+app.use('/api/admin/auth', adminAuthLimiter, adminAuthRouter); // Apply very strict limit to login attempts
 app.use('/api/admin/branches', adminBranchesRouter);
 app.use('/api/admin/reviews', adminReviewsRouter);
 app.use('/api/admin/menus', adminMenusRouter);
