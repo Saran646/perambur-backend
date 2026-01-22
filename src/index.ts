@@ -50,18 +50,24 @@ const adminAuthLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+// 1. CORS - MUST BE FIRST to handle preflights correctly
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow all origins for now to ensure connectivity
+        // In production, we can tighten this to specific subdomains
+        callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Apply general limiter to all routes
+// Apply general limiter only after CORS
 app.use(generalLimiter);
-
-// CORS configuration - Allow all for now to fix connection issues
-app.use(cors({
-    origin: true,
-    credentials: true
-}));
 
 // Geo-blocking middleware - Only allow requests from India
 app.use(geoBlockMiddleware);
