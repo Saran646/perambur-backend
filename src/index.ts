@@ -50,42 +50,31 @@ const adminAuthLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-const allowedOrigins = [
-    'https://perambursrinivasa.co.in',
-    'https://review.perambursrinivasa.co.in',
-    'https://admin.perambursrinivasa.co.in',
-    'http://localhost:3000',
-    'http://localhost:3001'
-];
+// NUCLEAR CORS - Allow everything for debugging
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+        res.header('Access-Control-Allow-Origin', origin);
+    } else {
+        res.header('Access-Control-Allow-Origin', '*');
+    }
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
 
-// 1. CORS - MUST BE FIRST
-app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl)
-        if (!origin) return callback(null, true);
-
-        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
-            callback(null, true);
-        } else {
-            // For troubleshooting: allow all for now, but log it
-            console.log('Allowing unknown origin:', origin);
-            callback(null, true);
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Apply general limiter only after CORS
-app.use(generalLimiter);
-
-// Geo-blocking middleware - Only allow requests from India
-app.use(geoBlockMiddleware);
+// TEMPORARILY DISABLED FOR DEBUGGING
+// app.use(generalLimiter);
+// app.use(geoBlockMiddleware);
 
 // Health check
 app.get('/health', (req, res) => {
