@@ -50,7 +50,13 @@ const adminAuthLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// NUCLEAR CORS - Allow everything for debugging
+// 1. REQUEST LOGGER - To see exactly what path the tunnel is sending
+app.use((req, res, next) => {
+    console.log(`🔍 [${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
+
+// 2. NUCLEAR CORS
 app.use((req, res, next) => {
     const origin = req.headers.origin;
     if (origin) {
@@ -81,10 +87,15 @@ app.get('/health', (req, res) => {
     res.json({ success: true, message: 'Server is running' });
 });
 
-// Public routes
+// Public routes (Support BOTH with and without /api prefix for robustness)
 app.use('/api/branches', publicBranchesRouter);
-app.use('/api/reviews', reviewLimiter, publicReviewsRouter); // Apply strict limit to review submissions
+app.use('/branches', publicBranchesRouter);
+
+app.use('/api/reviews', reviewLimiter, publicReviewsRouter);
+app.use('/reviews', reviewLimiter, publicReviewsRouter);
+
 app.use('/api/menus', publicMenusRouter);
+app.use('/menus', publicMenusRouter);
 
 // Test routes (for debugging)
 app.use('/api/test', testRouter);
