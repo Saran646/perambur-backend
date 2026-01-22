@@ -50,12 +50,27 @@ const adminAuthLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// 1. CORS - MUST BE FIRST to handle preflights correctly
+const allowedOrigins = [
+    'https://perambursrinivasa.co.in',
+    'https://review.perambursrinivasa.co.in',
+    'https://admin.perambursrinivasa.co.in',
+    'http://localhost:3000',
+    'http://localhost:3001'
+];
+
+// 1. CORS - MUST BE FIRST
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow all origins for now to ensure connectivity
-        // In production, we can tighten this to specific subdomains
-        callback(null, true);
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            // For troubleshooting: allow all for now, but log it
+            console.log('Allowing unknown origin:', origin);
+            callback(null, true);
+        }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
