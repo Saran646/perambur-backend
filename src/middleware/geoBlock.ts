@@ -11,11 +11,16 @@ export const geoBlockMiddleware = (req: Request, res: Response, next: NextFuncti
     }
 
     // Get country from various headers (Cloudflare, Render, etc.)
-    const country = 
+    const country =
         req.headers['cf-ipcountry'] ||           // Cloudflare
         req.headers['x-vercel-ip-country'] ||    // Vercel
         req.headers['x-country'] ||              // Generic
         null;
+
+    // Skip for local IP (localhost)
+    if (req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1') {
+        return next();
+    }
 
     // If we have a country header and it's not India, block
     if (country && country !== 'IN') {
