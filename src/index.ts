@@ -22,6 +22,9 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT || 4000;
 
+// Trust proxy for Cloudflare Tunnel
+app.set('trust proxy', 1);
+
 // Rate limiting configurations
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes

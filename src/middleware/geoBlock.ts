@@ -17,8 +17,14 @@ export const geoBlockMiddleware = (req: Request, res: Response, next: NextFuncti
         req.headers['x-country'] ||              // Generic
         null;
 
-    // Skip for local IP (localhost)
-    if (req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1') {
+    // Skip for local IP (localhost) - more robust check
+    const isLocal =
+        req.ip === '127.0.0.1' ||
+        req.ip === '::1' ||
+        req.ip?.includes('127.0.0.1') ||
+        req.ip?.includes('::ffff:127.0.0.1');
+
+    if (isLocal) {
         return next();
     }
 
